@@ -4,7 +4,15 @@
  Author:	gutek
 */
 
-// the setup function runs once when you press reset or power the board
+
+#include <LiquidCrystal_SR3W.h>
+#include <LiquidCrystal_SR2W.h>
+#include <LiquidCrystal_SR.h>
+#include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal.h>
+#include <LCD.h>
+#include <I2CIO.h>
+#include <FastIO.h>
 void setup() {
 
 }
