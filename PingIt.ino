@@ -3,10 +3,12 @@
  Created:	08.09.2016 14:40:44
  Author:	gutek
 */
-String version="V0.1.2";
+String version="V0.2.1";
 //--------------------------------------------------
-int sendelay = 50;
-int sensornr = 1;//|1=HC-SR04|
+int sendelay = 5;
+int measuredelay = 1;
+int measurecount = 10;
+int sensornr = 3;//|1=HC-SR04|2=SHARP ZLF|3=Sharp K0F|
 //--------------------------------------------------
 
 #include <Wire.h> 
@@ -18,25 +20,43 @@ int sensornr = 1;//|1=HC-SR04|
 #define pin_lcd_scl 3
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
 
+long dist_sen1 = 0;
+long dist_sen2 = 0;
+uint32_t mtimestart = 0;
+uint32_t mtime = 0;
+float mcount = 0;
+
 //Ultraschall Sensor HC SR-04
 #define pin_senhc1_trig A0
 #define pin_senhc1_echo A1
 #define pin_senhc2_trig A2
 #define pin_senhc2_echo A3
-float dist_sen1 = 0;
-float time_sen1 = 0;
-float dist_sen2 = 0;
-float time_sen2 = 0;
-uint32_t mtimestart = 0;
-uint32_t mtime = 0;
-float mcount = 0;
+long time_sen1 = 0;
+long time_sen2 = 0;
 
+//IR-Sensor Sharp GP2Y0A60SZLF 10-150cm, 5V
+#define pin_senSZLF1_en A0
+#define pin_senSZLF1_out A1
+#define pin_senSZLF2_en A2
+#define pin_senSZLF2_out A3
+long measure_sen1 = 0;
+long measure_sen2 = 0;
+
+//IR-Sensor Sharp GP2Y0A21YK0F 10-80cm, 5V
+#define pin_senSK0F1_out A1
+#define pin_senSK0F2_out A3
 void setup() 
 {
 	switch (sensornr)
 	{
 	case 1:
 		hcinit();
+		break;
+	case 2:
+		szlfinit();
+		break;
+	case 3:
+		sk0finit();
 		break;
 	}
 
@@ -92,6 +112,76 @@ void hcmeasure()
 	dist_sen2 = time_sen2 / 29.1; // Zeit in Zentimeter umrechnen
 }
 
+//Initialisierung Sharp ZLF
+void szlfinit()
+{
+	pinMode(pin_senSZLF1_en, OUTPUT);
+	pinMode(pin_senSZLF1_out, INPUT);
+	pinMode(pin_senSZLF2_en, OUTPUT);
+	pinMode(pin_senSZLF2_out, INPUT);
+	digitalWrite(pin_senSZLF1_en, HIGH);	//Sensor an
+	digitalWrite(pin_senSZLF2_en, HIGH);	//Sensor an
+}
+
+//Messung Sharp ZLF
+void szlfmeasure()
+{
+	//Messung Sensor 1
+	measure_sen1 = 0;
+	for (int i = 0; i < measurecount+1; i++)
+	{
+		delay(measuredelay);
+		measure_sen1 = measure_sen1 + analogRead(pin_senSZLF1_out);
+	}
+	measure_sen1 = measure_sen1 / measurecount;
+	dist_sen1 = (187754 * pow(measure_sen1, -1.51));
+
+	delay(sendelay);
+
+	//Messung Sensor 2
+	measure_sen2 = 0;
+	for (int i = 0; i < measurecount + 1; i++)
+	{
+		delay(measuredelay);
+		measure_sen2 = measure_sen2 + analogRead(pin_senSZLF2_out);
+	}
+	measure_sen2 = measure_sen2 / measurecount;
+	dist_sen2 = (187754 * pow(measure_sen2, -1.51));
+}
+
+//Initialisierung Sharp K0F
+void sk0finit()
+{
+	pinMode(pin_senSK0F1_out, INPUT);
+	pinMode(pin_senSK0F2_out, INPUT);
+}
+
+//Messung Sharp K0F
+void sk0fmeasure()
+{
+	//Messung Sensor 1
+	measure_sen1 = 0;
+	for (int i = 0; i < measurecount+1; i++)
+	{
+		delay(measuredelay);
+		measure_sen1 = measure_sen1 + analogRead(pin_senSK0F1_out);
+	}
+	measure_sen1 = measure_sen1 / measurecount;
+	dist_sen1 = (65 * pow(measure_sen1*0.0048828125, -1.10));
+
+	delay(sendelay);
+
+	//Messung Sensor 2
+	measure_sen2 = 0;
+	for (int i = 0; i < measurecount + 1; i++)
+	{
+		delay(measuredelay);
+		measure_sen2 = measure_sen2 + analogRead(pin_senSK0F2_out);
+	}
+	measure_sen2 = measure_sen2 / measurecount;
+	dist_sen2 = (27.728 * pow(measure_sen2 *0.001, -1.2045));
+}
+
 // the loop function runs over and over again until power down or reset
 void loop() 
 {
@@ -100,6 +190,12 @@ void loop()
 	{
 	case 1:
 		hcmeasure();
+		break;
+	case 2:
+		szlfmeasure();
+		break;
+	case 3:
+		sk0fmeasure();
 		break;
 	}
 	
