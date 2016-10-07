@@ -8,7 +8,7 @@ String version="V0.2.1";
 int sendelay = 5;
 int measuredelay = 1;
 int measurecount = 10;
-int sensornr = 3;//|1=HC-SR04|2=SHARP ZLF|3=Sharp K0F|
+int sensornr = 2;//|1=HC-SR04|2=SHARP ZLF|3=Sharp K0F|
 //--------------------------------------------------
 
 #include <Wire.h> 
@@ -167,8 +167,7 @@ void sk0fmeasure()
 		measure_sen1 = measure_sen1 + analogRead(pin_senSK0F1_out);
 	}
 	measure_sen1 = measure_sen1 / measurecount;
-	dist_sen1 = (65 * pow(measure_sen1*0.0048828125, -1.10));
-
+	dist_sen1 = (4*12343.85 * pow(measure_sen1, -1.15));
 	delay(sendelay);
 
 	//Messung Sensor 2
@@ -179,7 +178,7 @@ void sk0fmeasure()
 		measure_sen2 = measure_sen2 + analogRead(pin_senSK0F2_out);
 	}
 	measure_sen2 = measure_sen2 / measurecount;
-	dist_sen2 = (27.728 * pow(measure_sen2 *0.001, -1.2045));
+	dist_sen2 = (4*12343.85 * pow(measure_sen2, -1.15));
 }
 
 // the loop function runs over and over again until power down or reset
